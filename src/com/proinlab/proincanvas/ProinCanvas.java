@@ -22,7 +22,7 @@ public class ProinCanvas extends View {
 	public static final int PENSTYLE_PEN = 1;
 	public static final int PENSTYLE_BRUSH = 2;
 
-	private Bitmap mBitmap;
+	private Bitmap HistoryBitmap;
 	private Canvas mCanvas;
 	private Path mPath;
 	private Paint mBitmapPaint;
@@ -32,7 +32,7 @@ public class ProinCanvas extends View {
 	private ArrayList<Paint> PaintArray = new ArrayList<Paint>();
 	private int HistoryPoint = 0;
 	private Bitmap preBitmap;
-	
+
 	private int penstyle = PENSTYLE_PEN;
 	private int penwidth = 4;
 	private int pencolor = Color.BLACK;
@@ -89,25 +89,25 @@ public class ProinCanvas extends View {
 		if (HistoryPoint == MAXHISTORY)
 			HistoryPoint--;
 
-		for (int i = MAXHISTORY - 1; i > HistoryPoint - 2; i--) {
-			if (PathArray.size() > i) {
-				PathArray.remove(i);
-				PaintArray.remove(i);
-			}
-		}
-
 		mPath.lineTo(mX, mY);
 		PathArray.add(mPath);
 		PaintArray.add(mPaint);
 
 		Canvas tmpCanvas = new Canvas(preBitmap);
 		tmpCanvas.drawPath(mPath, mPaint);
-		if (PathArray.size() > MAXHISTORY) {
-			tmpCanvas.drawPath(mPath, mPaint);
+		if (PathArray.size() == MAXHISTORY - 1) {
+			Canvas HistoryCanvas = new Canvas(HistoryBitmap);
+			HistoryCanvas.drawPath(PathArray.get(0), PaintArray.get(0));
 			PathArray.remove(0);
 			PaintArray.remove(0);
 		}
 
+		for (int i = MAXHISTORY - 1; i > HistoryPoint - 2; i--) {
+			if (PathArray.size() > i) {
+				PathArray.remove(i);
+				PaintArray.remove(i);
+			}
+		}
 		mPath = new Path();
 	}
 
@@ -137,7 +137,7 @@ public class ProinCanvas extends View {
 		Bitmap tmpBit = Bitmap.createBitmap(this.width, this.height,
 				Bitmap.Config.ARGB_8888);
 		Canvas tmpC = new Canvas(tmpBit);
-		tmpC.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
+		tmpC.drawBitmap(HistoryBitmap, 0, 0, mBitmapPaint);
 		for (int i = 0; i < PathArray.size(); i++)
 			tmpC.drawPath(PathArray.get(i), PaintArray.get(i));
 		return tmpBit;
@@ -149,9 +149,9 @@ public class ProinCanvas extends View {
 	public void setCanvasBitmap(Bitmap bitmap) {
 		if (bitmap == null)
 			return;
-		mBitmap = Bitmap.createBitmap(this.width, this.height,
+		HistoryBitmap = Bitmap.createBitmap(this.width, this.height,
 				Bitmap.Config.ARGB_8888);
-		mCanvas = new Canvas(mBitmap);
+		mCanvas = new Canvas(HistoryBitmap);
 		mCanvas.drawBitmap(bitmap, 0, 0, mBitmapPaint);
 		bitmap.recycle();
 		invalidate();
@@ -159,7 +159,7 @@ public class ProinCanvas extends View {
 		preBitmap = Bitmap.createBitmap(this.width, this.height,
 				Bitmap.Config.ARGB_8888);
 		Canvas tmpCanvas = new Canvas(preBitmap);
-		tmpCanvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
+		tmpCanvas.drawBitmap(HistoryBitmap, 0, 0, mBitmapPaint);
 
 		PathArray = new ArrayList<Path>();
 		PaintArray = new ArrayList<Paint>();
@@ -174,7 +174,7 @@ public class ProinCanvas extends View {
 			preBitmap = Bitmap.createBitmap(this.width, this.height,
 					Bitmap.Config.ARGB_8888);
 			Canvas tmpCanvas = new Canvas(preBitmap);
-			tmpCanvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
+			tmpCanvas.drawBitmap(HistoryBitmap, 0, 0, mBitmapPaint);
 			HistoryPoint--;
 			for (int i = 0; i < HistoryPoint; i++)
 				tmpCanvas.drawPath(PathArray.get(i), PaintArray.get(i));
@@ -201,7 +201,7 @@ public class ProinCanvas extends View {
 			preBitmap = Bitmap.createBitmap(this.width, this.height,
 					Bitmap.Config.ARGB_8888);
 			Canvas tmpCanvas = new Canvas(preBitmap);
-			tmpCanvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
+			tmpCanvas.drawBitmap(HistoryBitmap, 0, 0, mBitmapPaint);
 			HistoryPoint++;
 			for (int i = 0; i < HistoryPoint; i++)
 				tmpCanvas.drawPath(PathArray.get(i), PaintArray.get(i));
@@ -293,7 +293,7 @@ public class ProinCanvas extends View {
 	 * CanvasView를 메모리상에서 free시킨다.
 	 */
 	public void distroyView() {
-		mBitmap.recycle();
+		HistoryBitmap.recycle();
 	}
 
 	/*--------------------------------------------------------*/
@@ -346,8 +346,9 @@ public class ProinCanvas extends View {
 	}
 
 	private void initCanvas() {
-		mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-		mCanvas = new Canvas(mBitmap);
+		HistoryBitmap = Bitmap.createBitmap(width, height,
+				Bitmap.Config.ARGB_8888);
+		mCanvas = new Canvas(HistoryBitmap);
 		mPath = new Path();
 		mBitmapPaint = new Paint(Paint.DITHER_FLAG);
 
